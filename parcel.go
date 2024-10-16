@@ -48,7 +48,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	// здесь из таблицы может вернуться несколько строк
 	rows, err := s.db.Query("SELECT number, client, status, address, created_at FROM parcel WHERE client = :client", sql.Named("client", client))
 	if err != nil {
-		return []Parcel{}, err
+		return nil, err
 	}
 	defer rows.Close()
 	// заполните срез Parcel данными из таблицы
@@ -58,9 +58,12 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		var p Parcel
 		err := rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 		if err != nil {
-			return res, err
+			return nil, err
 		}
 		res = append(res, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return res, nil
 }
@@ -107,19 +110,3 @@ func (s ParcelStore) Delete(number int) error {
 
 	return nil
 }
-
-/*row := s.db.QueryRow("SELECT status FROM parcel WHERE number = : number", sql.Named("number", number))
-	var status string
-	err := row.Scan(&status)
-	if err != nil {
-		return err
-	}
-	if status == ParcelStatusRegistered {
-		_, err := s.db.Exec("DELETE FROM parcel WHERE number = : number", sql.Named("number", number))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-*/
